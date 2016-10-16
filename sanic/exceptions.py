@@ -1,4 +1,3 @@
-from .response import text
 from traceback import format_exc
 
 
@@ -31,7 +30,7 @@ class Handler:
     def add(self, exception, handler):
         self.handlers[exception] = handler
 
-    def response(self, request, exception):
+    def response(self, request, response, exception):
         """
         Fetches and executes an exception handler and returns a reponse object
         :param request: Request
@@ -39,13 +38,16 @@ class Handler:
         :return: Response object
         """
         handler = self.handlers.get(type(exception), self.default)
-        response = handler(request=request, exception=exception)
+        response = handler(request=request, response=response, exception=exception)
         return response
 
-    def default(self, request, exception):
+    def default(self, request, response, exception):
         if issubclass(type(exception), SanicException):
-            return text("Error: {}".format(exception), status=getattr(exception, 'status_code', 500))
+            response.status = getattr(exception, 'status_code', 500)
+            return response.text("Error: {}".format(exception))
         elif self.sanic.debug:
-            return text("Error: {}\nException: {}".format(exception, format_exc()), status=500)
+            response.status = 500
+            return response.text("Error: {}\nException: {}".format(exception, format_exc()))
         else:
-            return text("An error occurred while generating the request", status=500)
+            response.status = 500
+            return response.text("An error occurred while generating the request")

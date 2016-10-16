@@ -1,12 +1,10 @@
 import asyncio
 from inspect import isawaitable
 from traceback import format_exc
-from types import FunctionType
 
 from .config import Config
 from .exceptions import Handler
 from .log import log, logging
-from .middleware import Middleware
 from .response import HTTPResponse
 from .router import Router
 from .server import serve
@@ -63,7 +61,6 @@ class Sanic:
         Decorates and registers middleware to be called before a request
         can either be called as @app.middleware or @app.middleware('request')
         """
-        middleware = None
         attach_to = 'request'
 
         def register_middleware(middleware):
@@ -80,11 +77,6 @@ class Sanic:
             attach_to = args[0]
             return register_middleware
 
-        if isinstance(middleware, FunctionType):
-            middleware = Middleware(process_request=middleware)
-
-        return middleware
-
     # -------------------------------------------------------------------- #
     # Request Handling
     # -------------------------------------------------------------------- #
@@ -97,27 +89,31 @@ class Sanic:
         :param response_callback: Response function to be called with the response as the only argument
         :return: Nothing
         """
+
+        response = HTTPResponse()
+
         try:
             # Middleware process_request
-            response = False
+            _response = False
             # The if improves speed.  I don't know why
             if self.request_middleware:
                 for middleware in self.request_middleware:
-                    response = middleware(request)
-                    if isawaitable(response):
-                        response = await response
-                    if response:
+                    _response = middleware(request, response)
+                    if isawaitable(_response):
+                        _response = await _response
+                    if _response:
+                        response = _response
                         break
 
             # No middleware results
-            if not response:
+            if not _response:
                 # Fetch handler from router
                 handler, args, kwargs = self.router.get(request)
                 if handler is None:
                     raise ServerError("'None' was returned while requesting a handler from the router")
 
                 # Run response handler
-                response = handler(request, *args, **kwargs)
+                response = handler(request, response, *args, **kwargs)
                 if isawaitable(response):
                     response = await response
 
@@ -131,9 +127,9 @@ class Sanic:
                             response = _response
                             break
 
-        except Exception as e:
+        except Exception as exception:
             try:
-                response = self.error_handler.response(request, e)
+                response = self.error_handler.response(request, response, exception)
                 if isawaitable(response):
                     response = await response
             except Exception as e:

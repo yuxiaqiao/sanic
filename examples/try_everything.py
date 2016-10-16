@@ -1,28 +1,27 @@
 from sanic import Sanic
 from sanic.log import log
-from sanic.response import json, text
 from sanic.exceptions import ServerError
 
 app = Sanic(__name__)
 
 
 @app.route("/")
-async def test_async(request):
-    return json({"test": True})
+async def test_async(req, res):
+    return res.json({"test": True})
 
 
 @app.route("/sync", methods=['GET', 'POST'])
-def test_sync(request):
-    return json({"test": True})
+def test_sync(req, res):
+    return res.json({"test": True})
 
 
 @app.route("/dynamic/<name>/<id:int>")
-def test_params(request, name, id):
-    return text("yeehaww {} {}".format(name, id))
+def test_params(req, res, name, id):
+    return res.text("yeehaww {} {}".format(name, id))
 
 
 @app.route("/exception")
-def exception(request):
+def exception(req, res):
     raise ServerError("It's dead jim")
 
 
@@ -31,8 +30,8 @@ def exception(request):
 # ----------------------------------------------- #
 
 @app.exception(ServerError)
-async def test(request, exception):
-    return json({"exception": "{}".format(exception), "status": exception.status_code}, status=exception.status_code)
+async def test(req, res, exception):
+    return res.json({"exception": "{}".format(exception), "status": exception.status_code}, status=exception.status_code)
 
 
 # ----------------------------------------------- #
@@ -40,18 +39,18 @@ async def test(request, exception):
 # ----------------------------------------------- #
 
 @app.route("/json")
-def post_json(request):
-    return json({"received": True, "message": request.json})
+def post_json(req, res):
+    return res.json({"received": True, "message": req.json})
 
 
 @app.route("/form")
-def post_json(request):
-    return json({"received": True, "form_data": request.form, "test": request.form.get('test')})
+def post_json(req, res):
+    return res.json({"received": True, "form_data": req.form, "test": req.form.get('test')})
 
 
 @app.route("/query_string")
-def query_string(request):
-    return json({"parsed": True, "args": request.args, "url": request.url, "query_string": request.query_string})
+def query_string(req, res):
+    return res.json({"parsed": True, "args": req.args, "url": req.url, "query_string": req.query_string})
 
 
 # ----------------------------------------------- #

@@ -6,45 +6,44 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 sys.path.insert(0, currentdir + '/../../../')
 
 from sanic import Sanic
-from sanic.response import json, text
 from sanic.exceptions import ServerError
 
 app = Sanic("test")
 
 
 @app.route("/")
-async def test(request):
-    return json({"test": True})
+async def test(req, res):
+    return res.json({"test": True})
 
 
 @app.route("/sync", methods=['GET', 'POST'])
-def test(request):
-    return json({"test": True})
+def test(req, res):
+    return res.json({"test": True})
 
 
 @app.route("/text/<name>/<butt:int>")
-def rtext(request, name, butt):
-    return text("yeehaww {} {}".format(name, butt))
+def rtext(req, res, name, butt):
+    return res.text("yeehaww {} {}".format(name, butt))
 
 
 @app.route("/exception")
-def exception(request):
+def exception(req, res):
     raise ServerError("yep")
 
 
 @app.route("/exception/async")
-async def test(request):
+async def test(req, res):
     raise ServerError("asunk")
 
 
 @app.route("/post_json")
-def post_json(request):
-    return json({"received": True, "message": request.json})
+def post_json(req, res):
+    return res.json({"received": True, "message": req.json})
 
 
 @app.route("/query_string")
-def query_string(request):
-    return json({"parsed": True, "args": request.args, "url": request.url, "query_string": request.query_string})
+def query_string(req, res):
+    return res.json({"parsed": True, "args": req.args, "url": req.url, "query_string": req.query_string})
 
 
 import sys

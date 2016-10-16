@@ -1,5 +1,4 @@
 from sanic import Sanic
-from sanic.response import text
 from sanic.exceptions import InvalidUsage, ServerError, NotFound
 from sanic.utils import sanic_endpoint_test
 
@@ -7,23 +6,23 @@ exception_handler_app = Sanic('test_exception_handler')
 
 
 @exception_handler_app.route('/1')
-def handler_1(request):
+def handler_1(request, response):
     raise InvalidUsage("OK")
 
 
 @exception_handler_app.route('/2')
-def handler_2(request):
+def handler_2(request, response):
     raise ServerError("OK")
 
 
 @exception_handler_app.route('/3')
-def handler_3(request):
+def handler_3(request, response):
     raise NotFound("OK")
 
 
 @exception_handler_app.exception(NotFound, ServerError)
-def handler_exception(request, exception):
-    return text("OK")
+def handler_exception(request, response, exception):
+    return response.text("OK")
 
 
 def test_invalid_usage_exception_handler():

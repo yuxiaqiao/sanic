@@ -1,6 +1,4 @@
-from json import loads as json_loads, dumps as json_dumps
 from sanic import Sanic
-from sanic.response import json, text
 from sanic.utils import sanic_endpoint_test
 
 
@@ -14,9 +12,9 @@ def test_dynamic_route():
     results = []
 
     @app.route('/folder/<name>')
-    async def handler(request, name):
+    async def handler(request, response, name):
         results.append(name)
-        return text('OK')
+        return response.text('OK')
 
     request, response = sanic_endpoint_test(app, uri='/folder/test123')
 
@@ -30,9 +28,9 @@ def test_dynamic_route_string():
     results = []
 
     @app.route('/folder/<name:string>')
-    async def handler(request, name):
+    async def handler(request, response, name):
         results.append(name)
-        return text('OK')
+        return response.text('OK')
 
     request, response = sanic_endpoint_test(app, uri='/folder/test123')
 
@@ -46,9 +44,9 @@ def test_dynamic_route_int():
     results = []
 
     @app.route('/folder/<folder_id:int>')
-    async def handler(request, folder_id):
+    async def handler(request, response, folder_id):
         results.append(folder_id)
-        return text('OK')
+        return response.text('OK')
 
     request, response = sanic_endpoint_test(app, uri='/folder/12345')
     assert response.text == 'OK'
@@ -64,9 +62,9 @@ def test_dynamic_route_number():
     results = []
 
     @app.route('/weight/<weight:number>')
-    async def handler(request, weight):
+    async def handler(request, response, weight):
         results.append(weight)
-        return text('OK')
+        return response.text('OK')
 
     request, response = sanic_endpoint_test(app, uri='/weight/12345')
     assert response.text == 'OK'
@@ -83,8 +81,8 @@ def test_dynamic_route_regex():
     app = Sanic('test_dynamic_route_int')
 
     @app.route('/folder/<folder_id:[A-Za-z0-9]{0,4}>')
-    async def handler(request, folder_id):
-        return text('OK')
+    async def handler(request, response, folder_id):
+        return response.text('OK')
 
     request, response = sanic_endpoint_test(app, uri='/folder/test')
     assert response.status == 200

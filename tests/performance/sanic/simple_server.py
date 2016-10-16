@@ -6,14 +6,13 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 sys.path.insert(0, currentdir + '/../../../')
 
 from sanic import Sanic
-from sanic.response import json
 
 app = Sanic("test")
 
 
 @app.route("/")
-async def test(request):
-    return json({"test": True})
+async def test(req, res):
+    return res.json({"test": True})
 
 
-app.run(host="0.0.0.0", port=sys.argv[1])
+app.run(host="0.0.0.0", port=sys.argv[1], debug=True)

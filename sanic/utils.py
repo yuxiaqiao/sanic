@@ -4,7 +4,6 @@ from sanic.log import log
 HOST = '127.0.0.1'
 PORT = 42101
 
-
 async def local_request(method, uri, *args, **kwargs):
     url = 'http://{host}:{port}{uri}'.format(host=HOST, port=PORT, uri=uri)
     log.info(url)
@@ -21,7 +20,7 @@ def sanic_endpoint_test(app, method='get', uri='/', gather_request=True,
 
     if gather_request:
         @app.middleware
-        def _collect_request(request):
+        def _collect_request(request, response):
             results.append(request)
 
     async def _collect_response(loop):

@@ -1,16 +1,24 @@
 package main
 
 import (
-    "fmt"
     "os"
     "net/http"
+    "encoding/json"
+    "github.com/gorilla/mux"
 )
 
+type Hello struct {
+    Test      bool    `json:"test"`
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
+    json.NewEncoder(w).Encode(Hello{Test:true})
 }
 
 func main() {
-    http.HandleFunc("/", handler)
-    http.ListenAndServe(":" + os.Args[1], nil)
+    router := mux.NewRouter().StrictSlash(true)
+    router.HandleFunc("/", handler)
+
+    //http.HandleFunc("/", handler)
+    http.ListenAndServe(":" + os.Args[1], router)
 }

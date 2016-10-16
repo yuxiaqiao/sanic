@@ -1,7 +1,6 @@
-from json import loads as json_loads, dumps as json_dumps
 from sanic import Sanic
 from sanic.request import Request
-from sanic.response import json, text, HTTPResponse
+from sanic.response import HTTPResponse
 from sanic.utils import sanic_endpoint_test
 
 
@@ -15,12 +14,12 @@ def test_middleware_request():
     results = []
 
     @app.middleware
-    async def handler(request):
+    async def handler(request, response):
         results.append(request)
 
     @app.route('/')
-    async def handler(request):
-        return text('OK')
+    async def handler(request, response):
+        return response.text('OK')
 
     request, response = sanic_endpoint_test(app)
 
@@ -34,7 +33,7 @@ def test_middleware_response():
     results = []
 
     @app.middleware('request')
-    async def process_response(request):
+    async def process_response(request, response):
         results.append(request)
 
     @app.middleware('response')
@@ -43,8 +42,8 @@ def test_middleware_response():
         results.append(response)
 
     @app.route('/')
-    async def handler(request):
-        return text('OK')
+    async def handler(request, response):
+        return response.text('OK')
 
     request, response = sanic_endpoint_test(app)
 
@@ -58,12 +57,12 @@ def test_middleware_override_request():
     app = Sanic('test_middleware_override_request')
 
     @app.middleware
-    async def halt_request(request):
-        return text('OK')
+    async def halt_request(request, response):
+        return response.text('OK')
 
     @app.route('/')
-    async def handler(request):
-        return text('FAIL')
+    async def handler(request, response):
+        return response.text('FAIL')
 
     response = sanic_endpoint_test(app, gather_request=False)
 
@@ -76,11 +75,11 @@ def test_middleware_override_response():
 
     @app.middleware('response')
     async def process_response(request, response):
-        return text('OK')
+        return response.text('OK')
 
     @app.route('/')
-    async def handler(request):
-        return text('FAIL')
+    async def handler(request, response):
+        return response.text('FAIL')
 
     request, response = sanic_endpoint_test(app)
 

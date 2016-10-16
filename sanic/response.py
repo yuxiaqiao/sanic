@@ -1,7 +1,4 @@
 import ujson
-import httptools
-from ujson import loads as json_loads
-from urllib.parse import parse_qs
 
 STATUS_CODES = {
     200: 'OK',
@@ -18,20 +15,13 @@ STATUS_CODES = {
     504: 'Gateway Timeout',
 }
 
-
 class HTTPResponse:
     __slots__ = ('body', 'status', 'content_type', 'headers')
 
-    def __init__(self, body=None, status=200, headers=[], content_type='text/plain', body_bytes=b''):
-        self.content_type = content_type
-
-        if not body is None:
-            self.body = body.encode('utf-8')
-        else:
-            self.body = body_bytes
-
+    def __init__(self, status=200, headers=None, body=None):
+        self.body = body
         self.status = status
-        self.headers = headers
+        self.headers = headers or {}
 
     def output(self, version="1.1", keep_alive=False, keep_alive_timeout=None):
         # This is all returned in a kind-of funky way
@@ -46,23 +36,25 @@ class HTTPResponse:
         return b''.join([
                             'HTTP/{} {} {}\r\n'.format(version, self.status,
                                                        STATUS_CODES.get(self.status, 'FAIL')).encode(),
-                            b'Content-Type: ', self.content_type.encode(), b'\r\n',
+                            b'Content-Type: ', self.headers.get('Content-Type', 'text/plain').encode(), b'\r\n',
                             b'Content-Length: ', str(len(self.body)).encode(), b'\r\n',
                             b'Connection: ', ('keep-alive' if keep_alive else 'close').encode(), b'\r\n',
                         ] + additional_headers + [
                             b'\r\n',
-                            self.body,
+                            self.body or b'',
                         ])
 
+    def json(self, body):
+        self.headers['Content-Type'] = "application/json; charset=utf-8"
+        self.body = ujson.dumps(body).encode('utf-8')
+        return self
 
-def json(body, status=200, headers=None):
-    return HTTPResponse(ujson.dumps(body), headers=headers, status=status,
-                        content_type="application/json; charset=utf-8")
+    def text(self, body):
+        self.headers['Content-Type'] = "text/plain; charset=utf-8"
+        self.body = body.encode('utf-8')
+        return self
 
-
-def text(body, status=200, headers=None):
-    return HTTPResponse(body, status=status, headers=headers, content_type="text/plain; charset=utf-8")
-
-
-def html(body, status=200, headers=None):
-    return HTTPResponse(body, status=status, headers=headers, content_type="text/html; charset=utf-8")
+    def html(self, body):
+        self.headers['Content-Type'] = "text/html; charset=utf-8"
+        self.body = body.encode('utf-8')
+        return self
