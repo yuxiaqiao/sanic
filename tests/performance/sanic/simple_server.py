@@ -15,4 +15,4 @@ async def test(req, res):
     return res.json({"test": True})
 
 
-app.run(host="0.0.0.0", port=sys.argv[1], debug=True)
+app.run(host="0.0.0.0", port=sys.argv[1])
